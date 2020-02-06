@@ -1,0 +1,10 @@
+    "ADJ": 0,
+    "ADP": 1,
+    "ADV": 2,
+    "CONJ": 3,
+    "DET": 4,
+    "NOUN": 5,
+    "NUM": 6,
+    "PRT": 7,
+    "PRON": 8,
+    "VERB": 9
