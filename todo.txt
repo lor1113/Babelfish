@@ -1,4 +1,0 @@
-Todo list
-
-shiftset general characters
-shiftset groups

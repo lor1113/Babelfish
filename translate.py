@@ -217,8 +217,8 @@ def translate(stringinput):
     else:
         print("Input does not entirely consist of ASCII Characters. Offending characters were:")
         print([c for c in stringinput if c not in string.printable])
+    writer(folder / "final.json", dict)
 
 
 stringinput = "Hello there, general Kenobi"
 print(translate(stringinput))
-writer(folder / "final.json", dict)

@@ -14,7 +14,7 @@ from nltk.corpus import wordnet
 eng_charset = ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z"]
 disambiguate = ["JJ", "JJR", "JJS", "RB", "RBR", "RBS", "NN", "NNS", "VB", "VBG", "VBD", "VBN", "VBP", "VBZ"]
 proper = ["NNP", "NNPS"]
-results = [0.2, 2]
+results = [0.15, 1.75]
 wordspace = 8031810176
 length = 26
 shiftspace = {
