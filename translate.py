@@ -6,9 +6,9 @@ import nltk
 import numpy as np
 from nltk import pos_tag
 from nltk.tokenize import word_tokenize
-from pywsd.lesk import simple_lesk
+from nltk.wsd import lesk
 
-name = 4285349879
+name = 460996775
 folder = Path("Languages/" + str(name))
 json_data = open(folder / 'final.json').read()
 dict = json.loads(json_data)
@@ -49,6 +49,13 @@ def digitsum(x):
     return total
 
 
+def regexfit(strang, set):
+    for a, b in zip(strang, set):
+        if a != '*' and b != '*' and a != b:
+            return False
+    return True
+
+
 def digitalt(x):
     total = 1
     tick = 0
@@ -65,7 +72,7 @@ def digitalt(x):
         elif tick == 0:
             total = total / ord(letter)
             tick = 0
-    return (round(total))
+    return round(total)
 
 
 def choose(dict):
@@ -102,7 +109,7 @@ def shuffle(sentence):
             sprinkle.append(0)
             num = tagnums[tags[i][1]]
             inter = inter + str(num)
-    for i in range(9, 1, -1):
+    for i in range(8, 1, -1):
         if not i > len(inter):
             mod = len(inter) % i
             if mod == 0:
@@ -120,15 +127,23 @@ def shuffle(sentence):
             for j in range(len(splits)):
                 intset = [[], [], [], [], [], [], [], [], [], [], []]
                 each = splits[j]
-                if each in shiftset[str(i)]:
+                if any(regexfit(each, matched := x) for x in shiftset[str(i)].keys()):
+                    each = matched
                     target = shiftset[str(i)][each]
-                    pos = shift + ((j) * i)
+                    pos = shift + (j * i)
                     slice = sent[pos:pos + i]
-                    for l in range(len(str(each))):
-                        intset[int(str(each)[l])].append(slice[l])
-                    for m in range(len(str(target))):
-                        f = np.random.choice(intset[int(str(target)[m])])
-                        intset[int(str(target)[m])].remove(f)
+                    for l in range(len(each)):
+                        if each[l] == "*":
+                            intset[10].append(slice[l])
+                        else:
+                            intset[int(each[l])].append(slice[l])
+                    for m in range(len(target)):
+                        if target[m] == "*":
+                            f = np.random.choice(intset[10])
+                            intset[10].remove(f)
+                        else:
+                            f = np.random.choice(intset[int(target[m])])
+                            intset[int(target[m])].remove(f)
                         sent[pos] = f
                         pos = pos + 1
     for each in sprinkle:
@@ -192,7 +207,7 @@ def sentence_translate(strang):
                 dict[each] = word
         else:
             try:
-                wsd = simple_lesk(string, each)
+                wsd = lesk(string, each)
                 output = output + " " + dict[wsd._name]
             except:
                 if each in dict.keys():

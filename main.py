@@ -11,21 +11,23 @@ import numpy as np
 from nltk import pos_tag
 from nltk.corpus import wordnet
 
+lnumbers = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]
 eng_charset = ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z"]
 disambiguate = ["JJ", "JJR", "JJS", "RB", "RBR", "RBS", "NN", "NNS", "VB", "VBG", "VBD", "VBN", "VBP", "VBZ"]
+standin = ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z", "A", "B",
+           "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X"]
 proper = ["NNP", "NNPS"]
 results = [0.15, 1.75]
 wordspace = 8031810176
 length = 26
 shiftspace = {
-    2: 45,
-    3: 214,
-    4: 921,
-    5: 3532,
-    6: 11808,
-    7: 33399,
-    8: 76134,
-    9: 128042
+    2: 20,
+    3: 79,
+    4: 250,
+    5: 791,
+    6: 2500,
+    7: 7906,
+    8: 25000
 }
 json_data = open('thesaurus.json').read()
 thesaurus = json.loads(json_data)
@@ -34,6 +36,18 @@ words = list(set(words))
 translated = []
 translatepairs = {}
 final = {}
+
+
+def gen_charset(lnum):
+    charset = []
+    set1 = [0, 1]
+    set2 = [0, 1, 2, 3]
+    for i in range(50):
+        choice1 = np.random.choice(set1)
+        choice2 = np.random.choice(set2)
+        charset.append("L" + str(lnum) + str(i) + str(choice1) + str(choice2))
+    print(charset)
+    return (charset)
 
 
 def writer(target, tbw):
@@ -58,6 +72,13 @@ def randomDistri(data, values):
     values[0] = data[0] * np.random.uniform(0.5, 1.5)
     values[1] = data[1] * np.random.uniform(0.5, 1.5)
     return values
+
+
+def regexfit(strang, set):
+    for a, b in zip(strang, set):
+        if a != '*' and b != '*' and a != b:
+            return False
+    return True
 
 
 def y(x, charset, values):
@@ -94,9 +115,6 @@ def generate_markov(english):
     start = {}
     markov1 = {}
     x = list(range(length))
-    charset = []
-    charset2 = []
-    charset3 = []
     markov = {}
     if english == True:
         charset = copy.deepcopy(eng_charset)
@@ -105,11 +123,11 @@ def generate_markov(english):
         for each in eng_charset:
             start[each] = 0
     else:
-        for i in range(length):
-            charset.append("char" + str(i))
-            charset2.append("char" + str(i))
-            charset3.append("char" + str(i))
-            start["char" + str(i)] = 0
+        charset = standin
+        charset2 = copy.deepcopy(charset)
+        charset3 = copy.deepcopy(charset)
+        for each in charset:
+            start[each] = 0
     np.random.shuffle(charset3)
     for h in charset3:
         for char1 in charset:
@@ -245,6 +263,7 @@ def shiftgen():
     for i in range(min(keys), max(keys) + 1):
         print(i)
         shiftset[i] = {}
+        shiftset[i]["0"] = 0
         for j in range(shiftspace[i]):
             num = 0
             num2 = 0
@@ -252,7 +271,7 @@ def shiftgen():
                 num = np.random.choice(baseset, size=i)
                 num = "".join(num)
                 numset = [i for i in str(num)]
-                while num in list(shiftset[i].keys()):
+                while any((regexfit(num, x) for x in shiftset[i].keys())):
                     num = np.random.choice(baseset, size=i)
                     num = "".join(num)
                     numset = [i for i in str(num)]
@@ -265,10 +284,11 @@ def shiftgen():
             togo = togo - 1
             if togo % 1000 == 0:
                 print([num, num2])
+        shiftset[i].pop("0")
     return shiftset
 
 
-def language(seed="", state=""):
+def language(seed="", state="", english=True):
     starting = time.time()
     if seed:
         np.random.seed(seed)
@@ -279,8 +299,8 @@ def language(seed="", state=""):
         np.random.seed()
     state = np.random.get_state()
     length_mean, variance = generate_length()
-    markov, start, basic, charset = generate_markov(True)
     print(length_mean, variance)
+    markov, start, basic, charset = generate_markov(english)
     cycle(start, basic, markov, [], length_mean, variance)
     shiftset = shiftgen()
     now = datetime.now()
@@ -304,4 +324,48 @@ def language(seed="", state=""):
     writer(folder / "data.json", data)
 
 
-language()
+def gameLanguage(name, lnum):
+    starting = time.time()
+    np.random.seed()
+    mapper = {}
+    chararr = gen_charset(lnum)
+    for i in range(len(chararr)):
+        mapper[standin[i]] = chararr[i]
+    print(mapper)
+    state = np.random.get_state()
+    length_mean, variance = generate_length()
+    print(length_mean, variance)
+    markov, start, basic, charset = generate_markov(False)
+    cycle(start, basic, markov, [], length_mean, variance)
+    shiftset = shiftgen()
+    now = datetime.now()
+    dt_string = now.strftime("%d/%m/%Y %H:%M:%S")
+    ending = time.time()
+    data = {"Word Length": length_mean,
+            "Length Variance": variance,
+            "Charset Length": length,
+            "Charset": charset,
+            "Time Generated": dt_string,
+            "Time to Generate": ending - starting}
+    folder = Path("Data/Languages/" + str(name))
+    os.mkdir(folder)
+    writer(folder / "final.json", final)
+    writer(folder / "markov.json", markov)
+    writer(folder / "basic.json", basic)
+    writer(folder / "start.json", start)
+    writer(folder / "shiftset.json", shiftset)
+    writer(folder / "mapper.json", mapper)
+    writer(folder / "state.json", state[1].tolist())
+    writer(folder / "data.json", data)
+
+
+def gamegen():
+    starting = time.time()
+    chosen = np.random.choice(lnumbers, 7)
+    for i in range(len(chosen)):
+        gameLanguage(i, chosen[i])
+    ending = time.time()
+    print(ending - starting)
+
+
+gamegen()
